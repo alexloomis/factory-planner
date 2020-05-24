@@ -1,0 +1,68 @@
+name:                factory-planner
+version:             0.1.0.0
+github:              "alexloomis/factory-planner"
+license:             BSD3
+author:              "Alex Loomis"
+maintainer:          "atloomis@math.arizona.edu"
+copyright:           "2020 Alex Loomis"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: Please see the README on GitHub at <https://github.com/alexloomis/factory-planner#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- data-ordlist
+- extra
+- hashable
+- hmatrix
+- text
+- unordered-containers
+
+ghc-options:
+  #- -Wall
+  - -Wcompat
+  - -Wredundant-constraints
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+
+default-extensions:
+  - ConstraintKinds
+  - FlexibleContexts
+  - GeneralizedNewtypeDeriving
+  - LambdaCase
+  - TupleSections
+
+library:
+  source-dirs: src
+
+executables:
+  factory-planner-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - factory-planner
+
+tests:
+  factory-planner-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - factory-planner

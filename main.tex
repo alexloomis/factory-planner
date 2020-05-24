@@ -1,5 +1,6 @@
 \documentclass[12pt]{article}
 \usepackage{amsmath, amssymb}
+\usepackage{verbatim}
 
 \newcommand*\inv{^{-1}}
 \DeclareMathOperator\rank{rank}
@@ -44,8 +45,26 @@ then several recipes are linearly dependent,
 so we can choose $\rank M$ linearly independent columns.
 The system now has a unique solution, so we solve.
 
-% If $R$ is a square matrix and $\det R \neq 0$,
-% then $R$ is invertible, so we can easily find
-% $R = M\inv P$.
+This has been implemented in Haskell.
+As a test input, try
+\begin{verbatim}
+Matrix:
+[[1,-5],[0,1],[-1,-6]]
+Constraints:
+[(1, Just 1)]
+
+[([0,1],(2><1)
+ [ 5.0
+ , 1.0 ]),([0,1],(2><1)
+ [ -6.0
+ ,  1.0 ])]
+\end{verbatim}
+This means that if we have the two recipies;
+one iron from one coal,
+and one steel from five iron and six coal,
+and we want one steel,
+we can do so with minimal inputs and byproducts by
+either mining five times and smelting once,
+or by mining negative six times and smelting once.
 
 \end{document}
