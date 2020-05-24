@@ -1,0 +1,51 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb}
+
+\newcommand*\inv{^{-1}}
+\DeclareMathOperator\rank{rank}
+
+\title{Factory Planning Algorithm}
+\author{Alex Loomis}
+
+\begin{document}
+\pagenumbering{gobble}
+\maketitle
+
+Given a collection of recipes,
+create a matrix $M$ where each column of $M$ is a recipe,
+and each row corresponds to an item.
+For instance, if mining creates two iron per second
+and smelting consumes five iron to create one steel,
+\[
+  M = \begin{pmatrix}
+    2 & -5 \\
+    0 & 1 \\
+  \end{pmatrix}.
+\]
+
+Multiplying by a column of recipes, $R$,
+yields a column of outputs produced, $P$.
+Mining two times and smelting once produces
+one steel with a deficit of one iron:
+\[
+  R = \begin{pmatrix} 2 \\ 1 \end{pmatrix}, \quad
+  P = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad
+  MR = P.
+\]
+The user can specify up to $\rank M$ values of $P$, however,
+they must be chosen such that the submatrix of corresponding rows
+has linearly independent rows.
+If they specify fewer, the remaining choices can be assumed to be zero,
+to maximize self-sufficiency of the production line.
+Our goal then is to solve for $R$.
+
+If the rank of $M$ is less than the number of columns of $M$
+then several recipes are linearly dependent,
+so we can choose $\rank M$ linearly independent columns.
+The system now has a unique solution, so we solve.
+
+% If $R$ is a square matrix and $\det R \neq 0$,
+% then $R$ is invertible, so we can easily find
+% $R = M\inv P$.
+
+\end{document}

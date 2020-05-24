@@ -1,0 +1,6 @@
+*.swp
+.stack-work/
+stack.yaml.lock
+*.log
+*.aux
+
