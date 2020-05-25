@@ -16,7 +16,8 @@ import           Data.String           (IsString)
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import           Data.Tuple            (swap)
-import           Numeric.LinearAlgebra
+import           Numeric.LinearAlgebra hiding ((<>))
+import qualified Numeric.LinearAlgebra as LA
 
 newtype Item = Item Text deriving (Eq, Hashable, IsString, Ord, Show)
 newtype Name = Name Text deriving (Eq, Hashable, IsString, Ord, Show)
@@ -29,6 +30,10 @@ solveFactory b c = solve fixed free (trans b)
   where
     fixed = M.mapMaybe id c
     free = M.keys . M.filter isNothing $ c
+
+outputs :: Numeric a => Cookbook a -> HashMap Name a -> HashMap Item a
+outputs b r = M.fromList . zip (sort $ innerKeys b) . concat . toLists
+  $ (tr . toMatrix $ b) LA.<> toMatrix' r
 
 -- For testing
 
@@ -159,23 +164,6 @@ angSaph = M.fromList
   , oxy
   , coalFilt
   , pureWater ]
-
-someOreOut :: Int -> Constraint Double
-someOreOut n = M.fromList $ take n
-  [ ("coal", Nothing)
-  , ("compressed air", Nothing)
-  , ("copper ore", Nothing)
-  , ("crystal dust", Nothing)
-  , ("iron ore", Just 15)
-  , ("mineral sludge", Nothing)
-  , ("mineralized water", Nothing)
-  , ("nickle ore", Nothing)
-  , ("nitrogen", Nothing)
-  , ("saline water", Nothing)
-  , ("silicon ore", Nothing)
-  , ("sulfuric acid", Nothing)
-  , ("sulfuric water", Nothing)
-  , ("water", Nothing) ]
 
 oreOut :: Constraint Double
 oreOut =

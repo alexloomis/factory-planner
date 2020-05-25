@@ -48,23 +48,67 @@ The system now has a unique solution, so we solve.
 This has been implemented in Haskell.
 As a test input, try
 \begin{verbatim}
-Matrix:
-[[1,-5],[0,1],[-1,-6]]
-Constraints:
-[(1, Just 1)]
+>> solutions = filter (all (>= 0)) . solveFactory angIron $ ironOut
+>> solutions
 
-[([0,1],(2><1)
- [ 5.0
- , 1.0 ]),([0,1],(2><1)
- [ -6.0
- ,  1.0 ])]
+[ fromList [ (Name "Molten iron", 0.0)
+           , (Name "Iron plate", 0.0)
+           , (Name "Iron ingot", 0.0)
+           , (Name "Process iron", 1.875) ]
+, fromList [ (Name "Molten iron", 0.9375)
+           , (Name "Iron plate", 2.8125)
+           , (Name "Iron ingot", 0.46875)
+           , (Name "Process iron", 1.875) ]]
+
+>> outputs angIron $ solution !! 0
+
+fromList [ (Item "iron ore", -7.5)
+         , (Item "coke", 0.0)
+         , (Item "processed iron", 3.75)
+         , (Item "molten iron", 0.0)
+         , (Item "iron plate", 0.0)
+         , (Item "iron ingot", 0.0) ]
+
+>> outputs angIron $ solution !! 1
+
+fromList [ (Item "iron ore", -7.5)
+         , (Item "coke", -0.9375)
+         , (Item "processed iron", 0.0)
+         , (Item "molten iron", 0.0)
+         , (Item "iron plate", 11.25)
+         , (Item "iron ingot", 0.0) ]
 \end{verbatim}
-This means that if we have the two recipies;
-one iron from one coal,
-and one steel from five iron and six coal,
-and we want one steel,
-we can do so with minimal inputs and byproducts by
-either mining five times and smelting once,
-or by mining negative six times and smelting once.
+
+where
+
+\begin{verbatim}
+procIron :: Recipe Double
+procIron = ("Process iron",)
+  [ ("iron ore", -4)
+  , ("processed iron", 2) ]
+
+ironIngot :: Recipe Double
+ironIngot = ("Iron ingot",)
+  [ ("processed iron", -8)
+  , ("coke", -2)
+  , ("iron ingot", 24) ]
+
+moltenIron :: Recipe Double
+moltenIron = ("Molten iron",)
+  [ ("iron ingot", -12)
+  , ("molten iron", 120) ]
+
+ironPlate :: Recipe Double
+ironPlate = ("Iron plate",)
+  [ ("molten iron", -40)
+  , ("iron plate", 4) ]
+
+angIron :: Cookbook Double
+angIron = [procIron, ironIngot, moltenIron, ironPlate]
+
+ironOut :: Constraint Double
+ironOut = [ ("iron ore", Just (-7.5)), ("iron plate", Nothing) ]
+\end{verbatim}
+(output reformatted for clarity).
 
 \end{document}
