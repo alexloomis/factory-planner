@@ -4,7 +4,8 @@ import           Control.Monad         (join)
 import           Data.Hashable         (Hashable)
 import           Data.HashMap.Strict   (HashMap)
 import qualified Data.HashMap.Strict   as M
-import           Data.List             (elemIndex, nub, sort, subsequences)
+import           Data.List             (elemIndex, nub, sort, subsequences,
+                                        (\\))
 import           Data.List.Extra       (disjoint, groupSortOn)
 import           Data.List.Ordered     (subset)
 import           Data.Maybe            (catMaybes, mapMaybe)
@@ -52,6 +53,9 @@ toMatrix :: (Container Vector a, Num a, Ord k, Ord l)
   => DoubleMap k l a -> Matrix a
 toMatrix b = assoc (M.size b, length $ innerKeys b) 0 (toAssocInt b)
 
+toMatrix' :: (Container Vector a, Num a, Ord k) => HashMap k a -> Matrix a
+toMatrix' = toMatrix . fmap (M.fromList . pure . ((),))
+
 -- Are the rows independent?
 isInd :: (Field a, Ord k, Ord l) => DoubleMap k l a -> Bool
 isInd m = rank (toMatrix m) == M.size m
@@ -62,19 +66,31 @@ choices n = filter (\x -> length x == n) . subsequences
 
 -- SubMaps with n keys.
 allSizeNSub :: Key k => Int -> HashMap k v -> [HashMap k v]
-allSizeNSub n m = fmap (foldr M.delete m) . choices n . M.keys $ m
+allSizeNSub n m = fmap (foldr M.delete m)
+  . choices (M.size m - n) . M.keys $ m
+
+-- SubMaps with n keys, excluding some.
+allSizeNSubBut :: Key k => Int -> [k] -> HashMap k v -> [HashMap k v]
+allSizeNSubBut n free m =
+  [ M.filterWithKey (\k v -> k `elem` keyList) m
+  | keyList <- choices n . (\\ free) . M.keys $ m ]
 
 -- The max rank submatricies with independent rows.
 allMaxInd :: (Field a, Key k, Ord l)
   => DoubleMap k l a -> [DoubleMap k l a]
 allMaxInd m = filter isInd . allSizeNSub (rank $ toMatrix m) $ m
 
+-- The max rank submatricies with independent rows, excluding some.
+allMaxIndBut :: (Field a, Key k, Ord l)
+  => [k] -> DoubleMap k l a -> [DoubleMap k l a]
+allMaxIndBut free m = filter isInd . allSizeNSubBut (rank $ toMatrix m) free $ m
+
 -- The max rank submatricies with independent rows,
 -- including or excluding certain rows.
 chooseInd :: (Field a, Key k, Ord l)
   => [k] -> [k] -> DoubleMap k l a -> [DoubleMap k l a]
-chooseInd keep toss = filter p . allMaxInd
-  where p b = keep `subset` M.keys b && toss `disjoint` M.keys b
+chooseInd fixedKeys free = filter hasKeys . allMaxIndBut free
+  where hasKeys b = null $ fixedKeys \\ M.keys b
 
 chooseCols :: (Field a, Key k, Key l) => DoubleMap k l a -> [DoubleMap k l a]
 chooseCols = fmap trans . allMaxInd . trans
@@ -82,13 +98,13 @@ chooseCols = fmap trans . allMaxInd . trans
 -- All submatricies with independent rows and columns, respecting row preferences.
 chooseBoth :: (Field a, Key k, Key l)
   => [k] -> [k] -> DoubleMap k l a -> [DoubleMap k l a]
-chooseBoth keep toss m = concatMap chooseCols (chooseInd keep toss m)
+chooseBoth fixedKeys free m = concatMap chooseCols (chooseInd fixedKeys free m)
 
 -- All legal constraints where extra terms to zero.
 allExtraZero :: (Field a, Key k, Num v, Ord l)
   => HashMap k v -> [k] -> DoubleMap k l a -> [HashMap k v]
-allExtraZero cs toss = fmap (M.union cs . fmap (const 0))
-  . chooseInd (M.keys cs) toss
+allExtraZero cs free = fmap (M.union cs . fmap (const 0))
+  . chooseInd (M.keys cs) free
 
 -- Solve Ax = B, where B is a column matrix.
 innerSolver :: (Field a, Key l, Ord k)
@@ -97,7 +113,6 @@ innerSolver b c
   | M.keys b == M.keys c = fromCol <$> linearSolve (toMatrix b) (toMatrix' c)
   | otherwise = Nothing
   where
-    toMatrix' = toMatrix . fmap (M.fromList . pure . ((),))
     fromCol = M.fromList . zip (sort . innerKeys $ b) . concat . toLists
 
 -- Takes a list of fixed values, a list of free values,
