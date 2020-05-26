@@ -21,10 +21,10 @@ description: Please see the README on GitHub at <https://github.com/alexloomis/f
 
 dependencies:
 - base >= 4.7 && < 5
-- data-ordlist
 - extra
 - hashable
 - hmatrix
+  # - hslua
 - text
 - unordered-containers
 

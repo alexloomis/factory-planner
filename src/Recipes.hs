@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Recipes where
 
-import Solver
+import Solve
 
 import           Control.Monad         (join)
 import           Data.Hashable         (Hashable)
@@ -10,7 +10,6 @@ import           Data.HashMap.Strict   (HashMap)
 import qualified Data.HashMap.Strict   as M
 import           Data.List             (elemIndex, nub, sort, subsequences)
 import           Data.List.Extra       (disjoint)
-import           Data.List.Ordered     (subset)
 import           Data.Maybe            (isNothing, mapMaybe)
 import           Data.String           (IsString)
 import           Data.Text             (Text)
