@@ -24,7 +24,9 @@ dependencies:
 - extra
 - hashable
 - hmatrix
-  # - hslua
+- hslua
+- megaparsec
+- mtl
 - text
 - unordered-containers
 
@@ -46,7 +48,7 @@ library:
   source-dirs: src
 
 executables:
-  factory-planner-exe:
+  factory-planner-hs:
     main:                Main.hs
     source-dirs:         app
     ghc-options:

@@ -1,20 +1,16 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Recipes where
+module Recipe where
 
 import Solve
 
-import           Control.Monad         (join)
 import           Data.Hashable         (Hashable)
 import           Data.HashMap.Strict   (HashMap)
 import qualified Data.HashMap.Strict   as M
-import           Data.List             (elemIndex, nub, sort, subsequences)
-import           Data.List.Extra       (disjoint)
-import           Data.Maybe            (isNothing, mapMaybe)
+import           Data.List             (sort)
+import           Data.Maybe            (isNothing)
 import           Data.String           (IsString)
 import           Data.Text             (Text)
-import qualified Data.Text             as T
-import           Data.Tuple            (swap)
 import           Numeric.LinearAlgebra hiding ((<>))
 import qualified Numeric.LinearAlgebra as LA
 
@@ -24,8 +20,8 @@ type Recipe a = (Name, HashMap Item a)
 type Cookbook a = HashMap Name (HashMap Item a)
 type Constraint a = HashMap Item (Maybe a)
 
-solveFactory :: Field a => Cookbook a -> Constraint a -> [HashMap Name a]
-solveFactory b c = solve fixed free (trans b)
+solveFactory :: (Field a, Ord a) => Cookbook a -> Constraint a -> [HashMap Name a]
+solveFactory b c = smartSolve fixed free (trans b)
   where
     fixed = M.mapMaybe id c
     free = M.keys . M.filter isNothing $ c
@@ -33,12 +29,6 @@ solveFactory b c = solve fixed free (trans b)
 outputs :: Numeric a => Cookbook a -> HashMap Name a -> HashMap Item a
 outputs b r = M.fromList . zip (sort $ innerKeys b) . concat . toLists
   $ (tr . toMatrix $ b) LA.<> toMatrix' r
-
--- For testing
-
-test = trans angIron
-fixed = M.mapMaybe id ironOut
-free = M.keys . M.filter isNothing $ ironOut
 
 -- Simple example
 mkIron :: Recipe Double
@@ -165,19 +155,7 @@ angSaph = M.fromList
   , pureWater ]
 
 oreOut :: Constraint Double
-oreOut =
-  [ ("coal", Nothing)
-  , ("compressed air", Nothing)
-  , ("copper ore", Nothing)
-  , ("crystal dust", Nothing)
-  , ("iron ore", Just 15)
-  , ("mineral sludge", Nothing)
-  , ("mineralized water", Nothing)
-  , ("nickle ore", Nothing)
-  , ("nitrogen", Nothing)
-  , ("saline water", Nothing)
-  , ("silicon ore", Nothing)
-  , ("sulfuric acid", Nothing) ]
+oreOut = [("iron ore", Just 15)]
 
 -----
 

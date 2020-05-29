@@ -1,0 +1,165 @@
+{-# LANGUAGE OverloadedStrings #-}
+module Parse where
+
+import Recipe
+
+import           Control.Monad              (void)
+import           Control.Monad.Identity     (Identity)
+import           Data.Char                  (isDigit)
+import           Data.Functor               (($>))
+import           Data.Text                  (Text, pack, unpack)
+import           Data.Void                  (Void)
+import           Text.Megaparsec
+import           Text.Megaparsec.Char
+import qualified Text.Megaparsec.Char.Lexer as L
+
+type Parser = ParsecT Void Text Identity
+data RecordA a =
+    RIngA [(Item, a)]
+  | RResA Item
+  | RResCA a
+  | RKnownA
+  | RUnknownA Text
+  deriving Show
+data Record a =
+    RName Name
+  | RIng [(Item, a)]
+  | RRes Item
+  | RResC a
+  | RNorm [RecordA a]
+  | RExp [RecordA a]
+  | RIsRecipe
+  | RKnown
+  | RUnknown Text
+  deriving Show
+
+readT :: Read a => Text -> a
+readT = read . unpack
+
+-- | Eats nonzero amount of whitespace.
+spaceConsumer :: Parser ()
+spaceConsumer = L.space space1 lineComment blockComment
+  where
+    lineComment = L.skipLineComment "--"
+    blockComment = L.skipBlockCommentNested "--[[" "--]]"
+
+symbol :: Text -> Parser Text
+symbol = L.symbol spaceConsumer
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme spaceConsumer
+
+-- | Returns bracketed value.
+braces :: Parser a -> Parser a
+braces = between (symbol "{") (symbol "}")
+
+-- | Parse a comma separated list.
+list :: Parser a -> Parser [a]
+list = flip sepEndBy (symbol ",")
+
+-- | List enclosed by { and }
+bList :: Parser a -> Parser [a]
+bList = braces . list
+
+-- | Parse an integer representation.
+int :: Num a => Parser a
+int = lexeme L.decimal
+
+-- | Parse a lua string as text.
+text :: Parser Text
+text = lexeme $ pack <$> (singleQuotes <|> doubleQuotes)
+  where
+    singleQuotes = char '\'' *> manyTill L.charLiteral (char '\'')
+    doubleQuotes = char '"' *> manyTill L.charLiteral (char '"')
+
+item :: Parser Item
+item = Item <$> text
+
+pair :: Num a => Parser (Item, a)
+pair = braces $ do
+  i <- item
+  symbol ","
+  a <- int
+  pure (i,a)
+
+-- Causes issues with substring keys, ie result_count and result
+withKey :: Parser a -> Text -> Parser a
+withKey p k = do
+  symbol k
+  symbol "="
+  p
+
+name :: Parser Name
+name = (Name <$> text) `withKey` "name"
+
+ingredients :: Num a => Parser [(Item, a)]
+ingredients = bList pair `withKey` "ingredients"
+
+result :: Parser Item
+result = item `withKey` "result"
+
+resultCount :: Num a => Parser a
+resultCount = int `withKey` "result_count"
+
+energy :: Parser ()
+energy = void $ int `withKey` "energy_required"
+
+enabled :: Parser ()
+enabled = void $ (symbol "true" <|> symbol "false") `withKey` "enabled"
+
+category :: Parser ()
+category = void $ text `withKey` "category"
+
+{-
+unknown :: Parser Text
+unknown = pack <$> do
+  key <- lexeme . some $ alphaNumChar <|> char '_'
+  symbol "="
+  manyTill asciiChar $ eof <|> lookAhead (void parseKey)
+  pure key
+-}
+
+ingBlock :: Num a => Parser (RecordA a)
+ingBlock = choice
+  [ RIngA     <$> ingredients
+  , RResA     <$> result
+  , RResCA    <$> resultCount
+  , choice $ fmap ($> RKnownA) [ energy, enabled, category ] ]
+
+normal :: Num a => Parser [RecordA a]
+normal = bList ingBlock `withKey` "normal"
+
+expensive :: Num a => Parser [RecordA a]
+expensive = bList ingBlock `withKey` "expensive"
+
+isRecipe :: Parser (Record a)
+isRecipe = do
+  symbol "type"
+  symbol "="
+  symbol "'recipe'" <|> symbol "\"recipe\""
+  pure RIsRecipe
+
+-- keys must go before substring keys, ie result_count before result
+parseKey :: Num a => Parser (Record a)
+parseKey = choice
+  [ RNorm    <$> normal
+  , RExp     <$> expensive
+  , RName    <$> name
+  , RIng     <$> ingredients
+  , RResC    <$> resultCount
+  , RRes     <$> result
+  , isRecipe
+  , choice $ fmap ($> RKnown) [ energy, enabled, category ] ]
+
+parseBlock :: Num a => Parser [Record a]
+parseBlock = bList parseKey
+
+parseFile :: Num a => Parser [[Record a]]
+parseFile = do
+  hidden space
+  symbol "data:extend("
+  out <- bList parseBlock
+  symbol ")"
+  eof
+  pure out
+

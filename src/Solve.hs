@@ -1,17 +1,17 @@
 module Solve
-  ( DoubleMap
+  ( Key
+  , DoubleMap
   , innerKeys
   , toMatrix
   , toMatrix'
   , trans
-  , solve ) where
+  , solve
+  , smartSolve ) where
 
-import           Control.Monad         (liftM2)
 import           Data.Hashable         (Hashable)
 import           Data.HashMap.Strict   (HashMap)
 import qualified Data.HashMap.Strict   as M
-import           Data.List             (elemIndex, nub, sort, subsequences,
-                                        (\\))
+import           Data.List             (elemIndex, nub, sort, union, (\\))
 import           Data.List.Extra       (groupSortOn)
 import           Data.Maybe            (catMaybes, mapMaybe)
 import           Data.Tuple            (swap)
@@ -72,9 +72,9 @@ choices n xs =
   in if n>l then [] else subsequencesBySize xs !! (l-n)
   where
     subsequencesBySize [] = [[[]]]
-    subsequencesBySize (x:xs) =
-      let next = subsequencesBySize xs
-      in zipWith (++) ([]:next) (map (map (x:)) next ++ [[]])
+    subsequencesBySize (y:ys) =
+      let next = subsequencesBySize ys
+      in zipWith (++) ([]:next) (map (map (y:)) next ++ [[]])
 
 -- SubMaps with n keys, excluding some.
 allSizeNSubBut :: Key k => Int -> [k] -> HashMap k v -> [HashMap k v]
@@ -126,4 +126,22 @@ solve fixed free m = catMaybes
   [ innerSolver x y
   | x <- chooseBoth (M.keys fixed) free m
   , y <- allExtraZero fixed free m ]
+
+-- Rows with a unique nonzero entry.
+looseEnds :: (Eq a, Key k, Num a) => DoubleMap k l a -> [k]
+looseEnds m =
+  [ k
+  | k <- M.keys m
+  , let rowK = M.lookupDefault M.empty k m
+  , (== 1) . M.size . M.filter (/= 0) $ rowK ]
+
+-- Tries setting loose ends to be free,
+-- excluding those already declared to be fixed.
+smartSolve :: (Field a, Key k, Key l, Ord a)
+  => HashMap k a -> [k] -> DoubleMap k l a -> [HashMap l a]
+smartSolve fixed free m = case filter (all (>= 0)) . solve fixed free' $ m of
+  [] -> solve fixed free m
+  xs -> nub xs
+  where
+    free' = union free $ looseEnds m \\ M.keys fixed
 
