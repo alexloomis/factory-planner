@@ -3,4 +3,7 @@
 stack.yaml.lock
 *.log
 *.aux
+*.o
+*.h
+*.hi
 
