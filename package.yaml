@@ -47,16 +47,16 @@ default-extensions:
 library:
   source-dirs: src
 
-executables:
-  factory-planner-hs:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - factory-planner
+# executables:
+  # factory-planner-hs:
+  # main:                Main.hs
+  # source-dirs:         app
+  # ghc-options:
+  # - -threaded
+  # - -rtsopts
+  # - -with-rtsopts=-N
+  # dependencies:
+  # - factory-planner
 
 tests:
   factory-planner-test:

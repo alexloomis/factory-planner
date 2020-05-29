@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs #-}
-module Main where
+{-# LANGUAGE ForeignFunctionInterface #-}
+module CSolve where
 
 import Solve
 
 import qualified Data.HashMap.Strict   as M
 import           Data.Text             (Text)
-import           Foreign.Lua           (Lua)
-import qualified Foreign.Lua           as Lua
+import           Foreign.C.Types
 import           Numeric.LinearAlgebra (Field)
 
 solveFactory :: (Field a, Key k, Key l, Ord a)
@@ -16,11 +16,9 @@ solveFactory fixed free m = M.toList <$> smartSolve fixed' free m'
     fixed' = M.fromList fixed
     m' = fmap M.fromList . M.fromList $ m
 
-luaSolve :: (a ~ Double, k ~ Text, l ~ Text)
+csolve :: (a ~ CDouble, k ~ CString, l ~ CString)
   => [(k,a)] -> [k] -> [(k,[(l,a)])] -> Lua [[(l,a)]]
-luaSolve fixed free = pure . solveFactory fixed free
+csolve fixed free = pure . solveFactory fixed free
 
-main :: IO ()
-main = Lua.run $
-  Lua.registerHaskellFunction "solve_recipe_matrix" luaSolve
+foreign export ccall csolve
 

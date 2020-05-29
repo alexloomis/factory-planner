@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4d39afec89699616035d26d65c03ab647ad7ec66bfa46438a080d759fba76f09
+-- hash: 9e9f40993df62c46acb8f8fe891009760d04fe48ecf8badfcbdbbe4ad861b14a
 
 name:           factory-planner
 version:        0.1.0.0
@@ -27,9 +27,8 @@ source-repository head
 
 library
   exposed-modules:
-      Recipe
+      LuaSolve
       Solve
-      TestText
   other-modules:
       Paths_factory_planner
   hs-source-dirs:
@@ -39,27 +38,6 @@ library
   build-depends:
       base >=4.7 && <5
     , extra
-    , hashable
-    , hmatrix
-    , hslua
-    , megaparsec
-    , mtl
-    , text
-    , unordered-containers
-  default-language: Haskell2010
-
-executable factory-planner-exe
-  main-is: Main.hs
-  other-modules:
-      Paths_factory_planner
-  hs-source-dirs:
-      app
-  default-extensions: ConstraintKinds FlexibleContexts GeneralizedNewtypeDeriving LambdaCase TupleSections
-  ghc-options: -Wcompat -Wredundant-constraints -Wincomplete-record-updates -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      base >=4.7 && <5
-    , extra
-    , factory-planner
     , hashable
     , hmatrix
     , hslua
