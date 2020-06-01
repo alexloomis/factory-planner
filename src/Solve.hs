@@ -80,26 +80,28 @@ choices n xs =
       in zipWith (++) ([]:next) (map (map (y:)) next ++ [[]])
 
 -- SubMaps with n keys, excluding some.
-allSizeNSubBut :: Key k => Int -> [k] -> HashMap k v -> [HashMap k v]
-allSizeNSubBut n free m =
+allSizeNSub :: Key k => Int -> HashMap k v -> [HashMap k v]
+allSizeNSub n m =
   [ M.filterWithKey (\k _ -> k `elem` keyList) m
-  | keyList <- choices n . (\\ free) . M.keys $ m ]
+  | keyList <- choices n . M.keys $ m ]
 
 -- The max rank submatricies with independent rows, excluding some.
-allMaxIndBut :: (Field a, Key k, Ord l)
-  => [k] -> DoubleMap k l a -> [DoubleMap k l a]
-allMaxIndBut free m = filter isInd . allSizeNSubBut (rank $ toMatrix m) free $ m
+allMaxInd :: (Field a, Key k, Ord l)
+  => DoubleMap k l a -> [DoubleMap k l a]
+allMaxInd m = filter isInd . allSizeNSub (rank $ toMatrix m) $ m
 
 -- The max rank submatricies with independent rows,
 -- including or excluding certain rows.
 chooseInd :: (Field a, Key k, Ord l)
   => [k] -> [k] -> DoubleMap k l a -> [DoubleMap k l a]
-chooseInd fixedKeys free = filter hasKeys . allMaxIndBut free
-  where hasKeys b = null $ fixedKeys \\ M.keys b
+chooseInd fixedKeys free m = filter hasKeys . allMaxInd $ m'
+  where
+    hasKeys b = null $ fixedKeys \\ M.keys b
+    m' = M.filterWithKey (\k _ -> k `notElem` free) m
 
 -- Maximal sets of independent columns.
 chooseCols :: (Field a, Key k, Key l) => DoubleMap k l a -> [DoubleMap k l a]
-chooseCols = fmap trans . allMaxIndBut [] . trans
+chooseCols = fmap trans . allMaxInd . trans
 
 -- All submatricies with independent rows and columns, respecting row preferences.
 chooseBoth :: (Field a, Key k, Key l)
@@ -123,9 +125,9 @@ innerSolver b c
 
 -- Takes a list of fixed values, a list of free values,
 -- and a DoubleMap, and attempts to solve.
-solve :: (Field a, Key k, Key l)
+solve :: (Eq a, Field a, Key k, Key l)
   => HashMap k a -> [k] -> DoubleMap k l a -> [HashMap l a]
-solve fixed free m = catMaybes
+solve fixed free m = nub . catMaybes $
   [ innerSolver x y
   | x <- chooseBoth (M.keys fixed) free m
   , y <- allExtraZero fixed free m ]
@@ -144,7 +146,7 @@ smartSolve :: (Field a, Key k, Key l, Ord a)
   => HashMap k a -> [k] -> DoubleMap k l a -> [HashMap l a]
 smartSolve fixed free m = case filter (all (>= 0)) . solve fixed free' $ m of
   [] -> solve fixed free m
-  xs -> nub xs
+  xs -> xs
   where
     free' = union free $ looseEnds m \\ M.keys fixed
 
