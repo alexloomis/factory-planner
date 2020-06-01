@@ -16,6 +16,5 @@ matrix = {
 
 hs_init()
 print(haskell_matrix_solver(fixed, free, matrix))
-print("seg fault here?")
 hs_exit()
 
