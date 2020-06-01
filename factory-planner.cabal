@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9e9f40993df62c46acb8f8fe891009760d04fe48ecf8badfcbdbbe4ad861b14a
+-- hash: e9cd088ab281614f4f3818d72dea671360e8ed636c4a4ffc63debcec82ad6c53
 
 name:           factory-planner
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       LuaSolve
+      Recipe
       Solve
   other-modules:
       Paths_factory_planner
@@ -37,6 +38,7 @@ library
   ghc-options: -Wcompat -Wredundant-constraints -Wincomplete-record-updates -Wincomplete-uni-patterns
   build-depends:
       base >=4.7 && <5
+    , exceptions
     , extra
     , hashable
     , hmatrix
@@ -58,6 +60,7 @@ test-suite factory-planner-test
   ghc-options: -Wcompat -Wredundant-constraints -Wincomplete-record-updates -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , exceptions
     , extra
     , factory-planner
     , hashable

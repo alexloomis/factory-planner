@@ -1,3 +1,4 @@
+{-
 module Solve
   ( Key
   , DoubleMap
@@ -7,6 +8,8 @@ module Solve
   , trans
   , solve
   , smartSolve ) where
+-}
+module Solve where
 
 import           Data.Hashable         (Hashable)
 import           Data.HashMap.Strict   (HashMap)
@@ -106,8 +109,8 @@ chooseBoth fixedKeys free m = concatMap chooseCols (chooseInd fixedKeys free m)
 -- All legal constraints where extra terms to zero.
 allExtraZero :: (Field a, Key k, Num v, Ord l)
   => HashMap k v -> [k] -> DoubleMap k l a -> [HashMap k v]
-allExtraZero cs free = fmap (M.union cs . fmap (const 0))
-  . chooseInd (M.keys cs) free
+allExtraZero fixed free = fmap (M.union fixed . fmap (const 0))
+  . chooseInd (M.keys fixed) free
 
 -- Solve Ax = B, where B is a column matrix.
 innerSolver :: (Field a, Key l, Ord k)

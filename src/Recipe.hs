@@ -30,6 +30,10 @@ outputs :: Numeric a => Cookbook a -> HashMap Name a -> HashMap Item a
 outputs b r = M.fromList . zip (sort $ innerKeys b) . concat . toLists
   $ (tr . toMatrix $ b) LA.<> toMatrix' r
 
+fixed = M.mapMaybe id simple1
+free = M.keys . M.filter isNothing $ simple1
+matrix = trans simple
+
 -- Simple example
 mkIron :: Recipe Double
 mkIron = ("Make iron", [("iron", 1)])
@@ -42,7 +46,7 @@ simple = M.fromList [ mkIron, mkSteel ]
 
 -- planFactory simple simple1 should succeed
 simple1 :: Constraint Double
-simple1 = [("steel", Just 2)]
+simple1 = [("steel", Just 1), ("iron", Nothing)]
 
 -- planFactory simple simple2 should fail
 simple2 :: Constraint Double
