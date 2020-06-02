@@ -15,6 +15,6 @@ matrix = {
 }
 
 hs_init()
-print(haskell_matrix_solver(fixed, free, matrix))
+haskell_matrix_solver(fixed, free, matrix)
 hs_exit()
 

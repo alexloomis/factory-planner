@@ -22,15 +22,12 @@ description: Please see the README on GitHub at <https://github.com/alexloomis/f
 dependencies:
 - base >= 4.7 && < 5
 - containers
-- exceptions
 - extra
-- hashable
 - hmatrix
 - hslua
-- megaparsec
-- mtl
+  # - megaparsec
+  # - mtl
 - text
-- unordered-containers
 
 ghc-options:
   #- -Wall

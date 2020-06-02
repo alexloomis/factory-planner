@@ -6,4 +6,6 @@ stack.yaml.lock
 *.o
 *.h
 *.hi
+*.so
+*.cabal
 
